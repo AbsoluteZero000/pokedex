@@ -6,26 +6,33 @@ import (
 	"os"
 )
 
-func startRepl() {
+func startRepl(config *MapConfig) {
 
+	scanner := bufio.NewScanner((bufio.NewReader(os.Stdin)))
 	for {
-		var command string
-
+		var commands []string
 		fmt.Print("pokedex > ")
-		scanner := bufio.NewScanner((bufio.NewReader(os.Stdin)))
 
 		if scanner.Scan() {
-			command = scanner.Text()
+			commands = cleanInput(scanner.Text())
 		}
 
 		if err := scanner.Err(); err != nil {
 			fmt.Println(err)
 		}
 
+		if len(commands) == 0 {
+			continue
+		}
+
+		command := commands[0]
+
 		if cmd, ok := getCommands()[command]; ok {
-			if err := cmd.callback(); err != nil {
+			if err := cmd.callback(config); err != nil {
 				fmt.Println(err)
 			}
+		} else {
+			fmt.Println("Command not found")
 		}
 	}
 

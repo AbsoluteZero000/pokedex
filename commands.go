@@ -8,7 +8,7 @@ import (
 type cliCommand struct {
 	name        string
 	description string
-	callback    func() error
+	callback    func(*MapConfig) error
 }
 
 func getCommands() map[string]cliCommand {
@@ -22,10 +22,15 @@ func getCommands() map[string]cliCommand {
 			description: "Exit the Pokedex",
 			callback:    commandExit,
 		},
+		"map": {
+			name:        "next",
+			description: "Explore the map",
+			callback:    commandMap,
+		},
 	}
 }
 
-func commandHelp() error {
+func commandHelp(config *MapConfig) error {
 	fmt.Print("Welcome to the PokeDex\n\n")
 	fmt.Println("Usage:")
 	for k, v := range getCommands() {
@@ -34,8 +39,11 @@ func commandHelp() error {
 	return nil
 }
 
-func commandExit() error {
+func commandExit(config *MapConfig) error {
 	fmt.Print("Turning off the PokeDEX...\n\n")
 	os.Exit(0)
+	return nil
+}
+func commandMap(config *MapConfig) error {
 	return nil
 }

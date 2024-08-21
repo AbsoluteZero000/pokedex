@@ -1,5 +1,9 @@
 package main
 
 func main() {
-	startRepl()
+	locationsConfig := MapConfig{
+		Next: POKEAPI_BASE_URL + "/location",
+	}
+
+	startRepl(&locationsConfig)
 }
