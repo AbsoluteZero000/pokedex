@@ -2,36 +2,17 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"github.com/absolutezero000/pokedex/internal/pokecache"
 )
 
-type LocationResponse struct {
-	ID     int    `json:"id"`
-	Name   string `json:"name"`
-	Region struct {
-		Name string `json:"name"`
-		URL  string `json:"url"`
-	} `json:"region"`
-	Names []struct {
-		Name     string `json:"name"`
-		Language struct {
-			Name string `json:"name"`
-		} `json:"language"`
-	} `json:"names"`
-	GameIndices []struct {
-		GameIndex  int `json:"game_index"`
-		Generation struct {
-			Name string `json:"name"`
-			URL  string `json:"url"`
-		} `json:"generation"`
-	} `json:"game_indices"`
-	Areas []struct {
-		Name string `json:"name"`
-		URL  string `json:"url"`
-	} `json:"areas"`
+type Config struct {
+	client http.Client
+	Next string
+	Prev string
+	cache pokecache.Cache
 }
 
 type Result struct {
@@ -39,79 +20,68 @@ type Result struct {
 	Url string `json:"url"`
 }
 
-type MapConfig struct {
+type MapResponse struct {
 	Next *string `json:"next"`
 	Prev *string `json:"previous"`
 	Result []Result `json:"results"`
 }
-func getNextLocations(config *MapConfig) ([]Result, error){
-	if config.Next == nil {
-		return nil, errors.New("you have reached the end of the map")
+
+func (c* Config)getLocations(url string) (MapResponse, error){
+
+	if url == "" {
+		return MapResponse{}, fmt.Errorf("url is empty")
 	}
-	res, err := http.Get(*config.Next)
+
+	var mapResp MapResponse
+
+	if res, ok := c.cache.Get(url); ok {
+
+		err := json.Unmarshal(res, &mapResp)
+
+		if err != nil {
+			fmt.Println("Unmarshal Error:", err)
+			return MapResponse{}, err
+		}
+
+		return mapResp, nil
+	}
+
+	req, err := http.NewRequest("GET", url, nil)
 
 	if err != nil {
 		fmt.Println("HTTP Request Error:", err)
-		return nil, err
+		return MapResponse{}, err
+	}
+
+	res, err := c.client.Do(req)
+
+	if err != nil {
+		fmt.Println("HTTP Response Error:", err)
+		return MapResponse{}, err
 	}
 
 	defer res.Body.Close()
 
 	if res.StatusCode != 200 {
-		return nil, fmt.Errorf("response code is %d", res.StatusCode)
+		return MapResponse{}, fmt.Errorf("response code is %d", res.StatusCode)
 	}
 
 	body, err := io.ReadAll(res.Body)
 
 	if err != nil {
 		fmt.Println("Read Body Error:", err)
-		return nil, err
+		return MapResponse{}, err
 	}
 
-	err = json.Unmarshal(body, &config)
+	err = json.Unmarshal(body, &mapResp)
 
 	if err != nil {
 		fmt.Println("Unmarshal Error:", err)
 		fmt.Println("Raw JSON Response:", string(body))
-		return nil, err
+		return MapResponse{}, err
 	}
 
-	return config.Result, nil
-}
+	c.cache.Add(url, body)
 
-
-func getPrevLocations(config *MapConfig) ([]Result, error){
-	if config.Prev == nil {
-		return nil, errors.New("you have reached the start of the map")
-	}
-
-	res, err := http.Get(*config.Prev)
-
-	if err != nil {
-		fmt.Println("HTTP Request Error:", err)
-		return nil, err
-	}
-
-	defer res.Body.Close()
-
-	if res.StatusCode != 200 {
-		return nil, fmt.Errorf("response code is %d", res.StatusCode)
-	}
-
-	body, err := io.ReadAll(res.Body)
-
-	if err != nil {
-		fmt.Println("Read Body Error:", err)
-		return nil, err
-	}
-
-	err = json.Unmarshal(body, &config)
-
-	if err != nil {
-		fmt.Println("Unmarshal Error:", err)
-		fmt.Println("Raw JSON Response:", string(body))
-		return nil, err
-	}
-
-	return config.Result, nil
+	return mapResp, nil
 }

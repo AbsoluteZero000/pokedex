@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-func startRepl(config *MapConfig) {
+func startRepl(config *Config) {
 
 	scanner := bufio.NewScanner((bufio.NewReader(os.Stdin)))
 	for {

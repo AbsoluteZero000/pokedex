@@ -8,7 +8,7 @@ import (
 type cliCommand struct {
 	name        string
 	description string
-	callback    func(*MapConfig) error
+	callback    func(*Config) error
 }
 
 func getCommands() map[string]cliCommand {
@@ -35,7 +35,7 @@ func getCommands() map[string]cliCommand {
 	}
 }
 
-func commandHelp(config *MapConfig) error {
+func commandHelp(config *Config) error {
 	fmt.Print("Welcome to the PokeDex\n\n")
 	fmt.Println("Usage:")
 	for k, v := range getCommands() {
@@ -44,35 +44,68 @@ func commandHelp(config *MapConfig) error {
 	return nil
 }
 
-func commandExit(config *MapConfig) error {
+func commandExit(config *Config) error {
 	fmt.Print("Turning off the PokeDEX...\n\n")
 	os.Exit(0)
 	return nil
 }
-func commandMap(config *MapConfig) error {
+func commandMap(config *Config) error {
 
-	locations, err := getNextLocations(config)
+	locations, err := config.getLocations(config.Next)
+
 	if err != nil {
+		if err.Error() == "url is empty" {
+			fmt.Println("End of map")
+			return nil
+		}
 		fmt.Println(err)
 		return nil
 	}
 
-	for _, location := range locations {
+	for _, location := range locations.Result {
 		fmt.Printf("%s\n", location.Name)
 	}
+
+	config.Next = ""
+	config.Prev = ""
+
+	if locations.Next != nil {
+		config.Next = *locations.Next
+	}
+
+	if locations.Prev != nil {
+		config.Prev = *locations.Prev
+	}
+
 	return nil
 }
 
-func commandMapB(config *MapConfig) error {
+func commandMapB(config *Config) error {
 
-	locations, err := getPrevLocations(config)
+	locations, err := config.getLocations(config.Prev)
+
 	if err != nil {
+		if err.Error() == "url is empty" {
+			fmt.Println("End of map")
+			return nil
+		}
 		fmt.Println(err)
 		return nil
 	}
 
-	for _, location := range locations {
+	for _, location := range locations.Result {
 		fmt.Printf("%s\n", location.Name)
+	}
+
+	config.Next = ""
+	config.Prev = ""
+
+	if locations.Next != nil {
+		config.Next = *locations.Next
+	}
+
+	if locations.Prev != nil {
+		config.Prev = *locations.Prev
 	}
 
 	return nil
