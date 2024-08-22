@@ -32,6 +32,11 @@ func getCommands() map[string]cliCommand {
 			description: "Explore the map backwards",
 			callback:    commandMapB,
 		},
+		"explore": {
+			name:        "explore",
+			description: "Explore the pokemons in a certain location",
+			callback:    commandExplore,
+		},
 	}
 }
 
@@ -107,6 +112,20 @@ func commandMapB(config *Config) error {
 	if locations.Prev != nil {
 		config.Prev = *locations.Prev
 	}
+
+	return nil
+}
+
+func commandExplore(config *Config) error {
+	fmt.Println("Exploring " + config.args[0] + "...")
+	pokemons, err := config.exploreLocation(config.args[0])
+
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
+
+	fmt.Print(pokemons)
 
 	return nil
 }

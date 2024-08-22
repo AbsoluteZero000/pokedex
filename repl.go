@@ -28,6 +28,7 @@ func startRepl(config *Config) {
 		command := commands[0]
 
 		if cmd, ok := getCommands()[command]; ok {
+			config.args = commands[1:]
 			if err := cmd.callback(config); err != nil {
 				fmt.Println(err)
 			}
