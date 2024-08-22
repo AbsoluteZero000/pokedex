@@ -2,9 +2,10 @@ package main
 
 import (
 	"encoding/json"
-	"net/http"
+	"errors"
 	"fmt"
 	"io"
+	"net/http"
 )
 
 type LocationResponse struct {
@@ -33,56 +34,84 @@ type LocationResponse struct {
 	} `json:"areas"`
 }
 
-type PokeAPIClient interface {
-	getNextLocations(config MapConfig) []LocationResponse
-	getPrevLocations(config MapConfig) []LocationResponse
-}
-
-type Results struct {
+type Result struct {
 	Name string `json:"name"`
 	Url string `json:"url"`
 }
 
 type MapConfig struct {
-	Next string `json:"next"`
-	Prev string `json:"previous"`
-	Result []Results `json:"results"`
+	Next *string `json:"next"`
+	Prev *string `json:"previous"`
+	Result []Result `json:"results"`
 }
-func getNextLocations(config MapConfig) (MapConfig, error){
-	if config.Next == "" {
-		config.Next = POKEAPI_BASE_URL + "/location"
+func getNextLocations(config *MapConfig) ([]Result, error){
+	if config.Next == nil {
+		return nil, errors.New("you have reached the end of the map")
 	}
-
-	res, err := http.Get(config.Next)
+	res, err := http.Get(*config.Next)
 
 	if err != nil {
 		fmt.Println("HTTP Request Error:", err)
-		return MapConfig{}, err
+		return nil, err
 	}
 
 	defer res.Body.Close()
 
 	if res.StatusCode != 200 {
-		return MapConfig{}, fmt.Errorf("Response code is %d", res.StatusCode)
+		return nil, fmt.Errorf("response code is %d", res.StatusCode)
 	}
 
 	body, err := io.ReadAll(res.Body)
 
 	if err != nil {
 		fmt.Println("Read Body Error:", err)
-		return MapConfig{}, err
+		return nil, err
 	}
 
-
-	curr_config := MapConfig{}
-
-	err = json.Unmarshal(body, &curr_config)
+	err = json.Unmarshal(body, &config)
 
 	if err != nil {
 		fmt.Println("Unmarshal Error:", err)
 		fmt.Println("Raw JSON Response:", string(body))
-		return MapConfig{}, err
+		return nil, err
 	}
 
-	return curr_config, nil
+	return config.Result, nil
+}
+
+
+func getPrevLocations(config *MapConfig) ([]Result, error){
+	if config.Prev == nil {
+		return nil, errors.New("you have reached the start of the map")
+	}
+
+	res, err := http.Get(*config.Prev)
+
+	if err != nil {
+		fmt.Println("HTTP Request Error:", err)
+		return nil, err
+	}
+
+	defer res.Body.Close()
+
+	if res.StatusCode != 200 {
+		return nil, fmt.Errorf("response code is %d", res.StatusCode)
+	}
+
+	body, err := io.ReadAll(res.Body)
+
+	if err != nil {
+		fmt.Println("Read Body Error:", err)
+		return nil, err
+	}
+
+	err = json.Unmarshal(body, &config)
+
+	if err != nil {
+		fmt.Println("Unmarshal Error:", err)
+		fmt.Println("Raw JSON Response:", string(body))
+		return nil, err
+	}
+
+	return config.Result, nil
 }

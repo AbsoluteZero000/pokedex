@@ -27,6 +27,11 @@ func getCommands() map[string]cliCommand {
 			description: "Explore the map",
 			callback:    commandMap,
 		},
+		"mapb": {
+			name:        "prev",
+			description: "Explore the map backwards",
+			callback:    commandMapB,
+		},
 	}
 }
 
@@ -45,5 +50,30 @@ func commandExit(config *MapConfig) error {
 	return nil
 }
 func commandMap(config *MapConfig) error {
+
+	locations, err := getNextLocations(config)
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
+
+	for _, location := range locations {
+		fmt.Printf("%s\n", location.Name)
+	}
+	return nil
+}
+
+func commandMapB(config *MapConfig) error {
+
+	locations, err := getPrevLocations(config)
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
+
+	for _, location := range locations {
+		fmt.Printf("%s\n", location.Name)
+	}
+
 	return nil
 }
