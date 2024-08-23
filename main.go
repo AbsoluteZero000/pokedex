@@ -13,8 +13,8 @@ func main() {
 		},
 		Next: POKEAPI_BASE_URL + "/location-area",
 		Prev: "",
-
 		cache: pokecache.NewCache(5 * time.Minute),
+		capturedPokemon: make(map[string]bool),
 	}
 
 	startRepl(&locationsConfig)

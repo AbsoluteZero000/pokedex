@@ -14,6 +14,7 @@ type Config struct {
 	Prev   string
 	cache  pokecache.Cache
 	args   []string
+	capturedPokemon map[string]bool
 }
 
 type Result struct {
@@ -482,14 +483,12 @@ func (c *Config) getPokemon(name string) (PokemonResp, error) {
 	req, err := http.NewRequest("GET", fmt.Sprintf("%s/pokemon/%s", POKEAPI_BASE_URL, name), nil)
 
 	if err != nil {
-		fmt.Println(err)
 		return PokemonResp{}, err
 	}
 
 	res, err := c.client.Do(req)
 
 	if err != nil {
-		fmt.Println(err)
 		return PokemonResp{}, err
 	}
 
@@ -502,7 +501,6 @@ func (c *Config) getPokemon(name string) (PokemonResp, error) {
 	body, err := io.ReadAll(res.Body)
 
 	if err != nil {
-		fmt.Println("Read Body Error:", err)
 		return  PokemonResp{}, err
 	}
 
