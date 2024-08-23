@@ -136,14 +136,14 @@ func commandExplore(config *Config) error {
 func commandCapture(conifg *Config) error {
 	fmt.Println("Caputring " + conifg.args[0] + "...")
 
-	base_experience, err := conifg.getBaseExperience(conifg.args[0])
+	pokemon, err := conifg.getPokemon(conifg.args[0])
 
 	if err != nil {
 		fmt.Println(err)
 		return err
 	}
 
-	randNum := rand.Intn(base_experience)
+	randNum := rand.Intn(pokemon.BaseExperience)
 
 	if randNum > 40{
 		fmt.Println("You caught " + conifg.args[0] + "!")

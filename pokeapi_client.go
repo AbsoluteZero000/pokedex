@@ -466,49 +466,49 @@ func (c *Config) exploreLocation(name string) (string, error) {
 	return result, nil
 }
 
-func (c *Config) getBaseExperience(name string) (int, error) {
+func (c *Config) getPokemon(name string) (PokemonResp, error) {
 
 	if name == "" {
-		return 0, fmt.Errorf("name is empty")
+		return PokemonResp{}, fmt.Errorf("name is empty")
 	}
 
 	var p PokemonResp
 
 	if res, ok := c.cache.Get(fmt.Sprintf("%s/pokemon/%s", POKEAPI_BASE_URL, name)); ok {
 		json.Unmarshal(res, &p)
-		return 0, nil
+		return p, nil
 	}
 
 	req, err := http.NewRequest("GET", fmt.Sprintf("%s/pokemon/%s", POKEAPI_BASE_URL, name), nil)
 
 	if err != nil {
 		fmt.Println(err)
-		return 0, err
+		return PokemonResp{}, err
 	}
 
 	res, err := c.client.Do(req)
 
 	if err != nil {
 		fmt.Println(err)
-		return 0, err
+		return PokemonResp{}, err
 	}
 
 	defer res.Body.Close()
 
 	if res.StatusCode != 200 {
-		return 0, fmt.Errorf("response code is %d", res.StatusCode)
+		return PokemonResp{}, fmt.Errorf("response code is %d", res.StatusCode)
 	}
 
 	body, err := io.ReadAll(res.Body)
 
 	if err != nil {
 		fmt.Println("Read Body Error:", err)
-		return  0, err
+		return  PokemonResp{}, err
 	}
 
 	json.Unmarshal(body, &p)
 
 	c.cache.Add(fmt.Sprintf("%s/pokemon-species/%s", POKEAPI_BASE_URL, name), body)
 
-	return p.BaseExperience, nil
+	return p, nil
 }
