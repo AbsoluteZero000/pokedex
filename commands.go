@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"math/rand"
 )
 
 type cliCommand struct {
@@ -37,6 +38,11 @@ func getCommands() map[string]cliCommand {
 			description: "Explore the pokemons in a certain location",
 			callback:    commandExplore,
 		},
+		"capture": {
+			name: "capture",
+			description: "try Catching the pokemon",
+			callback: commandCapture,
+		},
 	}
 }
 
@@ -63,8 +69,7 @@ func commandMap(config *Config) error {
 			fmt.Println("End of map")
 			return nil
 		}
-		fmt.Println(err)
-		return nil
+		return err
 	}
 
 	for _, location := range locations.Result {
@@ -94,8 +99,7 @@ func commandMapB(config *Config) error {
 			fmt.Println("End of map")
 			return nil
 		}
-		fmt.Println(err)
-		return nil
+		return err
 	}
 
 	for _, location := range locations.Result {
@@ -121,11 +125,31 @@ func commandExplore(config *Config) error {
 	pokemons, err := config.exploreLocation(config.args[0])
 
 	if err != nil {
-		fmt.Println(err)
-		return nil
+		return err
 	}
 
 	fmt.Print(pokemons)
+
+	return nil
+}
+
+func commandCapture(conifg *Config) error {
+	fmt.Println("Caputring " + conifg.args[0] + "...")
+
+	base_experience, err := conifg.getBaseExperience(conifg.args[0])
+
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+
+	randNum := rand.Intn(base_experience)
+
+	if randNum > 40{
+		fmt.Println("You caught " + conifg.args[0] + "!")
+	} else {
+		fmt.Println("You failed to catch " + conifg.args[0] + "!")
+	}
 
 	return nil
 }
